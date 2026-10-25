@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mmd_mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - mmd_network
+
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: mmd_ai_service
+    ports:
+      - "8000:8000"
+    environment:
+      - AI_SERVICE_PORT=8000
+    networks:
+      - mmd_network
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: mmd_server
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - MONGO_URI=mongodb://mongodb:27017/morphed_media
+      - JWT_SECRET=supersecretkey_change_in_production
+      - AI_SERVICE_URL=http://ai-service:8000
+    depends_on:
+      - mongodb
+      - ai-service
+    networks:
+      - mmd_network
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: mmd_client
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:5000/api
+    depends_on:
+      - server
+    networks:
+      - mmd_network
+
+volumes:
+  mongodb_data:
+
+networks:
+  mmd_network:
+    driver: bridge

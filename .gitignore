@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+*/node_modules/
+client/node_modules/
+server/node_modules/
+
+# Python Virtual Environments
+venv/
+*/venv/
+env/
+*/env/
+.venv/
+*/.venv/
+
+# Python cache
+__pycache__/
+*/__pycache__/
+*/*/__pycache__/
+*.py[cod]
+*$py.class
+
+# MongoDB / Local Data
+data/
+*/data/
+*.lock
+*.log
+
+# Uploaded media & temp files
+uploads/
+*/uploads/
+temp_*
+url-*
+
+# Production Builds
+dist/
+*/dist/
+build/
+*/build/
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+*.env
+
+# OS Files
+.DS_Store
+Thumbs.db
+desktop.ini
