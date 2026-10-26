@@ -15,20 +15,29 @@ const downloadFromUrl = async (mediaUrl, preferredType = 'auto') => {
     fs.mkdirSync(uploadsDir, { recursive: true });
   }
 
-  const isVideoPlatform = /youtube\.com|youtu\.be|vimeo\.com|tiktok\.com|twitter\.com|x\.com/i.test(mediaUrl);
+  const isVideoPlatform = /youtube\.com|youtu\.be|vimeo\.com|tiktok\.com|twitter\.com|x\.com|instagram\.com|facebook\.com|fb\.watch|reddit\.com|dailymotion\.com/i.test(mediaUrl);
   const ytDlpPath = path.join(process.cwd(), '..', 'ai-service', 'venv', 'Scripts', 'yt-dlp.exe');
 
   if (isVideoPlatform && fs.existsSync(ytDlpPath)) {
-    const filename = `url-video-${Date.now()}-${Math.round(Math.random() * 1e9)}.mp4`;
-    const outputPath = path.join(uploadsDir, filename);
+    const baseId = `url-video-${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+    const outputTemplate = path.join(uploadsDir, `${baseId}.%(ext)s`);
+    const nodeRuntime = process.execPath ? `node:${process.execPath}` : 'node';
 
     await execFilePromise(ytDlpPath, [
-      '-f', 'best[ext=mp4]/best',
-      '--max-filesize', '50M',
-      '-o', outputPath,
+      '--no-playlist',
+      '--js-runtimes', nodeRuntime,
+      '-f', 'best[ext=mp4]/bestvideo[ext=mp4]/bestvideo/best',
+      '--max-filesize', '100M',
+      '-o', outputTemplate,
       mediaUrl
-    ], { timeout: 60000 });
+    ], { timeout: 120000 });
 
+    const matchingFiles = fs.readdirSync(uploadsDir).filter(f => f.startsWith(baseId));
+    if (matchingFiles.length === 0) {
+      throw new Error('Downloaded video file could not be located on disk.');
+    }
+    const filename = matchingFiles[0];
+    const outputPath = path.join(uploadsDir, filename);
     const stats = fs.statSync(outputPath);
     return {
       filePath: outputPath,
