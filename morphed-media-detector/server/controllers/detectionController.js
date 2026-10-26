@@ -16,9 +16,26 @@ const downloadFromUrl = async (mediaUrl, preferredType = 'auto') => {
   }
 
   const isVideoPlatform = /youtube\.com|youtu\.be|vimeo\.com|tiktok\.com|twitter\.com|x\.com|instagram\.com|facebook\.com|fb\.watch|reddit\.com|dailymotion\.com/i.test(mediaUrl);
-  const ytDlpPath = path.join(process.cwd(), '..', 'ai-service', 'venv', 'Scripts', 'yt-dlp.exe');
+  
+  const resolveYtDlp = () => {
+    if (process.env.YT_DLP_PATH && fs.existsSync(process.env.YT_DLP_PATH)) {
+      return process.env.YT_DLP_PATH;
+    }
+    const candidates = [
+      path.join(process.cwd(), '..', 'ai-service', 'venv', 'Scripts', 'yt-dlp.exe'),
+      path.join(process.cwd(), '..', 'ai-service', 'venv', 'bin', 'yt-dlp'),
+      'yt-dlp'
+    ];
+    for (const candidate of candidates) {
+      if (candidate === 'yt-dlp' || fs.existsSync(candidate)) {
+        return candidate;
+      }
+    }
+    return null;
+  };
+  const ytDlpPath = resolveYtDlp();
 
-  if (isVideoPlatform && fs.existsSync(ytDlpPath)) {
+  if (isVideoPlatform && ytDlpPath) {
     const baseId = `url-video-${Date.now()}-${Math.round(Math.random() * 1e9)}`;
     const outputTemplate = path.join(uploadsDir, `${baseId}.%(ext)s`);
     const nodeRuntime = process.execPath ? `node:${process.execPath}` : 'node';
